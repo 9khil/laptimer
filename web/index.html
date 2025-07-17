@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MQTT Stopwatch by 9khil</title>
+    <script src="mqtt.min.js"></script>
+    <style>
+      body {
+        background-color: #000;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+      }
+
+      .status-bar {
+        height: 4px;
+        background: rgb(255, 0, 0);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+      }
+
+      body.connected .status-bar {
+        background: rgb(3, 213, 3);
+      }
+
+      .stopwatch {
+        font-size: 200px;
+        margin-bottom: 50px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 30px;
+      }
+
+      button {
+        background-color: #fff;
+        color: #000;
+        font-size: 18px;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status-bar"></div>
+    <div class="stopwatch">00:00.000</div>
+    <div class="controls">
+      <button onclick="startStopwatch()">Start</button>
+      <button onclick="stopStopwatch()">Stop</button>
+      <button onclick="resetStopwatch()">Reset</button>
+    </div>
+
+    <script>
+      let startTime = 0,
+        elapsedTime = 0,
+        interval,
+        running = false,
+        mqttUser = "",
+        mqttPassword = "",
+        mqttServer = "",
+        mqttTopic = "";
+
+      const stopwatchEl = document.querySelector(".stopwatch");
+      const bodyEl = document.querySelector("body");
+
+      function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+        const seconds = String(totalSeconds % 60).padStart(2, "0");
+        const milliseconds = String(ms % 1000).padStart(3, "0");
+        return `${minutes}:${seconds}.${milliseconds}`;
+      }
+
+      function updateDisplay() {
+        const now = Date.now();
+        const currentElapsed = elapsedTime + (running ? now - startTime : 0);
+        stopwatchEl.textContent = formatTime(currentElapsed);
+      }
+
+      function startStopwatch() {
+        if (running) return;
+        running = true;
+        startTime = Date.now();
+        interval = setInterval(updateDisplay, 50);
+      }
+
+      function stopStopwatch() {
+        if (!running) return;
+        running = false;
+        clearInterval(interval);
+        elapsedTime += Date.now() - startTime;
+        updateDisplay();
+      }
+
+      function resetStopwatch() {
+        stopStopwatch();
+        elapsedTime = 0;
+        stopwatchEl.textContent = "00:00.000";
+      }
+
+      // MQTT SETUP
+      const client = mqtt.connect(mqttServer, {
+        username: mqttUser,
+        password: mqttPassword,
+      });
+
+      client.on("connect", () => {
+        console.log("Connected to MQTT broker");
+        client.subscribe(mqttTopic);
+        bodyEl.classList = "connected";
+      });
+
+      client.on("disconnect", () => {
+        console.log("Disconnected from MQTT broker");
+        bodyEl.classList = "";
+      });
+
+      client.on("message", (topic, message) => {
+        const command = message.toString().toLowerCase();
+        console.log("Received MQTT command:", command);
+
+        if (command === "start") startStopwatch();
+        else if (command === "stop") stopStopwatch();
+        else if (command === "reset") resetStopwatch();
+      });
+
+      client.on("error", (err) => {
+        console.error("MQTT error:", err);
+      });
+    </script>
+  </body>
+</html>
