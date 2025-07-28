@@ -14,6 +14,7 @@ http://laptimer.gpio.no
 
 - Highscores
 - Arcade button to reset (remote reset)
+- Indicators showing if start and stop ESP are connected.
 
 ### Links
 
