@@ -10,6 +10,11 @@
 
 http://laptimer.gpio.no
 
+## TODO
+
+- Highscores
+- Arcade button to reset (remote reset)
+
 ### Links
 
 https://www.speaktothegeek.co.uk/2022/10/esphome-ultrasonic-break-beam-sensor/
