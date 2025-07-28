@@ -71,10 +71,10 @@
         elapsedTime = 0,
         interval,
         running = false,
-        mqttUser = "",
-        mqttPassword = "",
-        mqttServer = "",
-        mqttTopic = "";
+        mqttUser = "mqttuser",
+        mqttPassword = "123MQTTyo",
+        mqttServer = "ws://192.168.1.196:1884",
+        mqttTopic = "home/stopwatch/control";
 
       const stopwatchEl = document.querySelector(".stopwatch");
       const bodyEl = document.querySelector("body");
@@ -97,6 +97,7 @@
         if (running) return;
         running = true;
         startTime = Date.now();
+        flashGreen();
         interval = setInterval(updateDisplay, 50);
       }
 
@@ -112,6 +113,30 @@
         stopStopwatch();
         elapsedTime = 0;
         stopwatchEl.textContent = "00:00.000";
+      }
+
+      function flashGreen() {
+        const flash = document.createElement("div");
+        flash.style.position = "fixed";
+        flash.style.top = "0";
+        flash.style.left = "0";
+        flash.style.width = "100vw";
+        flash.style.height = "100vh";
+        flash.style.backgroundColor = "rgb(3, 213, 3)";
+        flash.style.opacity = "1";
+        flash.style.zIndex = "9999";
+        flash.style.pointerEvents = "none";
+        flash.style.transition = "opacity 0.5s ease";
+
+        document.body.appendChild(flash);
+
+        requestAnimationFrame(() => {
+          flash.style.opacity = "0";
+        });
+
+        setTimeout(() => {
+          document.body.removeChild(flash);
+        }, 500);
       }
 
       // MQTT SETUP
